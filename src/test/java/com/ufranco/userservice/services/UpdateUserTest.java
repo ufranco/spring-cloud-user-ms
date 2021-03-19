@@ -6,6 +6,8 @@ import com.ufranco.userservice.repositories.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -40,7 +42,15 @@ public class UpdateUserTest {
     }
   }
 
-
+  User userToBeUpdated = User.builder()
+    .id(1L)
+    .username("abelain99")
+    .displayname("Carlos Santana")
+    .email("carlitossantana@gmail.com")
+    .password("T3tit@2awqs_2")
+    .createdAt(validDate)
+    .modifiedAt(validDate)
+    .build();
 
 
   @AfterEach
@@ -50,13 +60,13 @@ public class UpdateUserTest {
 
   @Test
   public void validUserTest()  {
-    User user = getValidUser();
+    User user = userToBeUpdated.changeDisplayname("Carlit0x Santillan");
 
     when(repository.existsById(user.getId()))
       .thenReturn(true);
 
     when(repository.findById(user.getId()))
-      .thenReturn(Optional.of(getUserToBeUpdated()));
+      .thenReturn(Optional.of(userToBeUpdated));
 
     when(repository.existsByUsername(user.getUsername()))
       .thenReturn(false);
@@ -71,8 +81,8 @@ public class UpdateUserTest {
 
   @Test
   public void nullIdTest() {
-    User user = getValidUser();
-    user.setId(null);
+    User user = userToBeUpdated
+    .changeId(null);
 
     InvalidUserFieldsException exception = itThrowsException(user);
 
@@ -84,8 +94,8 @@ public class UpdateUserTest {
 
   @Test
   public void notValidIdTest() {
-    User user = getValidUser();
-    user.setId(-1L);
+    User user = userToBeUpdated
+      .changeId(-1L);
 
     InvalidUserFieldsException exception = itThrowsException(user);
 
@@ -97,8 +107,8 @@ public class UpdateUserTest {
 
   @Test
   public void IdWithNoUserTest() {
-    User user = getValidUser();
-    user.setId(1L);
+    User user = userToBeUpdated
+      .changeId(1L);
 
     when(repository.existsById(1L)).thenReturn(false);
 
@@ -112,14 +122,14 @@ public class UpdateUserTest {
 
   @Test
   public void invalidUsernameTest() {
-    User user = getValidUser();
-    user.setUsername("a");
+    User user = userToBeUpdated
+      .changeUsername("a");
 
     when(repository.existsById(user.getId()))
       .thenReturn(true);
 
     when(repository.findById(user.getId()))
-      .thenReturn(Optional.of(getUserToBeUpdated()));
+      .thenReturn(Optional.of(userToBeUpdated));
 
 
     InvalidUserFieldsException exception = itThrowsException(user);
@@ -132,13 +142,15 @@ public class UpdateUserTest {
 
   @Test
   public void takenUsernameTest() {
-    User user = getValidUser();
+    User user = userToBeUpdated
+      .changeUsername("ricardo22")
+      .changeEmail("ricardo@gmail.com");
 
     when(repository.existsById(user.getId()))
       .thenReturn(true);
 
     when(repository.findById(user.getId()))
-      .thenReturn(Optional.of(getUserToBeUpdated()));
+      .thenReturn(Optional.of(userToBeUpdated));
 
     when(repository.existsByUsername(user.getUsername()))
       .thenReturn(true);
@@ -154,14 +166,14 @@ public class UpdateUserTest {
 
   @Test
   public void invalidEmailTest() {
-    User user = getValidUser();
-    user.setEmail("carlossantanagmail.com");
+    User user = userToBeUpdated
+      .changeEmail("carlossantanagmail.com");
 
     when(repository.existsById(user.getId()))
       .thenReturn(true);
 
     when(repository.findById(user.getId()))
-      .thenReturn(Optional.of(getUserToBeUpdated()));
+      .thenReturn(Optional.of(userToBeUpdated));
 
     InvalidUserFieldsException exception = itThrowsException(user);
 
@@ -173,14 +185,14 @@ public class UpdateUserTest {
 
   @Test
   public void takenEmailTest() {
-    User user = getValidUser();
-    user.setEmail("carloto@gmail.com");
+    User user = userToBeUpdated
+      .changeEmail("carloto@gmail.com");
 
     when(repository.existsById(user.getId()))
       .thenReturn(true);
 
     when(repository.findById(user.getId()))
-      .thenReturn(Optional.of(getUserToBeUpdated()));
+      .thenReturn(Optional.of(userToBeUpdated));
 
     when(repository.existsByUsername(user.getUsername()))
       .thenReturn(false);
@@ -196,16 +208,26 @@ public class UpdateUserTest {
     );
   }
 
-  @Test
-  public void invalidPasswordTest() {
-    User user = getValidUser();
-    user.setPassword("t3stit0_");
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "",
+    "a",
+    "testarudo",
+    "TESTARUDO",
+    "testarudo9",
+    "Testarudo9",
+    "T3starudo9",
+    "T3sta rudo9"
+  })
+  public void invalidPasswordTest(String password) {
+    User user = userToBeUpdated
+      .changePassword(password);
 
     when(repository.existsById(user.getId()))
       .thenReturn(true);
 
     when(repository.findById(user.getId()))
-      .thenReturn(Optional.of(getUserToBeUpdated()));
+      .thenReturn(Optional.of(userToBeUpdated));
 
     InvalidUserFieldsException exception = itThrowsException(user);
 
@@ -217,15 +239,15 @@ public class UpdateUserTest {
 
   @Test
   public void multipleInvalidFieldsTest() {
-    User user = getValidUser();
-    user.setUsername("aa___");
-    user.setPassword("testito");
+    User user = userToBeUpdated
+      .changeUsername("aa___")
+      .changePassword("testito");
 
     when(repository.existsById(user.getId()))
       .thenReturn(true);
 
     when(repository.findById(user.getId()))
-      .thenReturn(Optional.of(getUserToBeUpdated()));
+      .thenReturn(Optional.of(userToBeUpdated));
 
     InvalidUserFieldsException exception = itThrowsException(user);
 
@@ -243,20 +265,20 @@ public class UpdateUserTest {
 
   @Test
   public void invalidModifiedAtTest() {
-    User user = getValidUser();
-
+    User user = null;
     try {
-      user.setModifiedAt(
-        dateFormat.parse("2010-05-05 - 00:00:00")
-      );
-
+      user = userToBeUpdated
+        .changeModifiedAt(
+          dateFormat.parse("2010-05-05 - 00:00:00")
+        );
     } catch (ParseException ignored) {}
+    assert user != null;
 
     when(repository.existsById(user.getId()))
       .thenReturn(true);
 
     when(repository.findById(user.getId()))
-      .thenReturn(Optional.of(getUserToBeUpdated()));
+      .thenReturn(Optional.of(userToBeUpdated));
 
     InvalidUserFieldsException exception = itThrowsException(user);
 
@@ -273,30 +295,5 @@ public class UpdateUserTest {
       () -> service.updateUser(user)
     );
   }
-
-  private User getValidUser() {
-    return new User(
-      1L,
-      "abelain99",
-      "Carlos Santana",
-      "carlitossantana@gmail.com",
-      "T3tit@2aw2",
-      validDate,
-      validDate
-    );
-  }
-
-  private User getUserToBeUpdated() {
-    return new User(
-      1L,
-      "abelain2009",
-      "Carlos Santana",
-      "carlitossantana@gmail.com",
-      "T3tit@2awqs_2",
-      validDate,
-      validDate
-    );
-  }
-
 }
 

@@ -38,7 +38,7 @@ public class GetUserTest {
       .thenReturn(true);
 
     when(repository.findById(id))
-      .thenReturn(Optional.of(new User()));
+      .thenReturn(Optional.of(User.builder().build()));
 
     assertDoesNotThrow(() -> service.getUser(id));
   }
