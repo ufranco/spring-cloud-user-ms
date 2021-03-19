@@ -31,21 +31,21 @@ public class UserService {
     validateForQuery(params);
 
     Sort sort = Sort.by(
-      Sort.Direction.fromString(params.order()),
-      params.sortBy()
+      Sort.Direction.fromString(params.getOrder()),
+      params.getSortBy()
     );
 
     Pageable pageable = PageRequest.of(
-      params.page(),
-      params.limit(),
+      params.getPage(),
+      params.getLimit(),
       sort
     );
 
     log.debug("Executing User query under parameters: \n  " + params);
 
-    List<User> queryResult = params.name().isBlank() ?
+    List<User> queryResult = params.getName().isBlank() ?
       repository.findAll(pageable).getContent() :
-      repository.findAllContainingIgnoreCase(params.name(), pageable);
+      repository.findAllContainingIgnoreCase(params.getName(), pageable);
 
     return new UserQueryResponse(
       queryResult,
@@ -81,13 +81,13 @@ public class UserService {
   }
 
   public Response deleteUser(Long id) throws InvalidUserFieldsException {
-
     validateForDelete(id);
-
     repository.deleteById(id);
 
-    User userDeleted = new User();
-    userDeleted.setId(id);
+    User userDeleted = User.builder()
+      .id(id)
+      .build();
+
     return new Response(
       userDeleted,
       List.of("User was deleted successfully.")
@@ -103,57 +103,61 @@ public class UserService {
   }
 
   private void validatePaginationParameters(QueryParams params, List<InvalidField> invalidFields) {
-    if (params.page() < 0) {
+    if (params.getPage() < 0) {
       invalidFields.add(
-        new InvalidField(
-          "page",
-          List.of("Page number cannot be negative.")
-        )
+        InvalidField.builder()
+          .fieldName("page")
+          .messages(List.of("Page number cannot be negative."))
+          .build()
       );
     }
 
-    if(params.limit() < 1) {
+    if(params.getLimit() < 1) {
       invalidFields.add(
-        new InvalidField(
-          "limit",
-          List.of("Page limit cannot be negative.")
-        )
+        InvalidField.builder()
+          .fieldName("limit")
+          .messages(List.of("Page limit cannot be negative."))
+          .build()
       );
-    } else if(params.limit() > 100) {
+    } else if(params.getLimit() > 100) {
       invalidFields.add(
-        new InvalidField(
-          "limit",
-          List.of("Page limit is too large.")
-        )
+        InvalidField.builder()
+          .fieldName("limit")
+          .messages(List.of("Page limit is too large."))
+          .build()
       );
     }
   }
 
   private void validateSortParameters(QueryParams params, List<InvalidField> invalidFields) {
-    if (!(params.order().equals("asc") || params.order().equals("desc"))) {
+    if (!(params.getOrder().equals("asc") || params.getOrder().equals("desc"))) {
       invalidFields.add(
-        new InvalidField("order",
-          List.of("Order parameter does not meet the requirements to make the query.")
-        )
+        InvalidField.builder()
+          .fieldName("order")
+          .messages(List.of("Order parameter does not meet the requirements to make the query."))
+          .build()
       );
 
     }
-    if(params.sortBy().equalsIgnoreCase("password")) {
+    if(params.getSortBy().equalsIgnoreCase("password")) {
 
       invalidFields.add(
-        new InvalidField("sortBy",
-          List.of("Sort By field not valid.")
-        )
+
+        InvalidField.builder()
+          .fieldName("sortBy")
+          .messages(List.of("Sort By field not valid."))
+          .build()
       );
     } else {
       try {
-        User.class.getDeclaredField(params.sortBy().toLowerCase());
+        User.class.getDeclaredField(params.getSortBy().toLowerCase());
       } catch (NoSuchFieldException e) {
 
         invalidFields.add(
-          new InvalidField("sortBy",
-            List.of("SortBy field does not exist.")
-          )
+          InvalidField.builder()
+            .fieldName("sortBy")
+            .messages(List.of("SortBy field does not exist."))
+            .build()
         );
       }
     }
@@ -171,9 +175,12 @@ public class UserService {
 
     if(user.getId() != null) {
       invalidFields.add(
-        new InvalidField(
-          "id",
-          List.of("Id cannot be manually defined"))
+        InvalidField.builder()
+          .fieldName("id")
+          .messages(
+            List.of("Id cannot be manually defined")
+          )
+          .build()
       );
     }
 
@@ -207,10 +214,10 @@ public class UserService {
 
       if(user.getModifiedAt().before(userInDb.getModifiedAt())){
         invalidFields.add(
-          new InvalidField(
-            "modifiedAt",
-              List.of("Version mismatch between data provided and data stored.")
-            )
+          InvalidField.builder()
+            .fieldName("modifiedAt")
+            .messages(List.of("Version mismatch between data provided and data stored."))
+            .build()
         );
       }
 
@@ -246,13 +253,21 @@ public class UserService {
 
     } else return;
 
-    invalidFields.add(new InvalidField("id", messages));
+    invalidFields.add(
+      InvalidField.builder()
+        .fieldName("id")
+        .messages(messages)
+        .build()
+    );
   }
 
   private void usernameAvailabilityValidator(User user, List<InvalidField> invalidFields) {
     if(repository.existsByUsername(user.getUsername())) {
       invalidFields.add(
-        new InvalidField("username", List.of("Username already taken."))
+        InvalidField.builder()
+          .fieldName("username")
+          .messages(List.of("Username already taken."))
+          .build()
       );
     }
   }
@@ -260,7 +275,10 @@ public class UserService {
   private void emailAvailabilityValidator(User user, List<InvalidField> invalidFields) {
     if(repository.existsByEmail(user.getEmail())) {
       invalidFields.add(
-        new InvalidField("email", List.of("Email already taken."))
+        InvalidField.builder()
+          .fieldName("email")
+          .messages(List.of("Email already taken."))
+          .build()
       );
     }
   }
@@ -281,7 +299,10 @@ public class UserService {
 
     if(!messages.isEmpty()) {
       invalidFields.add(
-        new InvalidField("username", messages)
+        InvalidField.builder()
+          .fieldName("username")
+          .messages( messages)
+          .build()
       );
     }
   }
@@ -297,7 +318,10 @@ public class UserService {
 
     if(!messages.isEmpty()) {
       invalidFields.add(
-        new InvalidField("displayname", messages)
+        InvalidField.builder()
+          .fieldName("displayname")
+          .messages(messages)
+          .build()
       );
     }
   }
@@ -309,10 +333,11 @@ public class UserService {
       !Pattern.matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$", email)
     ) {
       invalidFields.add(
-        new InvalidField(
-          "email",
-          List.of("Please add a valid email.")
-      ));
+        InvalidField.builder()
+          .fieldName("email")
+          .messages(List.of("Please add a valid email."))
+          .build()
+      );
     }
 
 
@@ -327,18 +352,19 @@ public class UserService {
     } else {
 
       if (!Pattern.matches("^.{8,50}$", password)) {
-        messages.add("Password must have at least 8 characters and less than 50.");
+        messages.add("Password must contain at least 8 characters and less than 50.");
       }
       if (!Pattern.matches("^.*[0-9].*[0-9].*$", password)) {
-        messages.add("Password must have at least two digits.");
+        messages.add("Password must contain at least two digits.");
       }
       if (!Pattern.matches("^.*[a-z].*$", password)) {
-        messages.add("Password must have at least one lowercase character.");
+        messages.add("Password must contain at least one lowercase character.");
+        System.out.println("a");
       }
       if (!Pattern.matches("^.*[A-Z].*$", password)) {
-        messages.add("Password must have at least one uppercase character.");
+        messages.add("Password must contain at least one uppercase character.");
       }
-      if (Pattern.matches("^.*\\s|\\n.*$", password)) {
+      if (Pattern.matches("^.*\\s.*$", password)) {
         messages.add("Password must not contain white spaces.");
       }
       if (!Pattern.matches("^.*[^a-zA-Z0-9].*$", password)) {
@@ -348,9 +374,11 @@ public class UserService {
 
     if(!messages.isEmpty()) {
       invalidFields.add(
-        new InvalidField("password", messages)
+        InvalidField.builder()
+          .fieldName("password")
+          .messages(messages)
+          .build()
       );
     }
-
   }
 }

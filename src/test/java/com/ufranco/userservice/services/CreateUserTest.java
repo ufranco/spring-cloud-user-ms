@@ -6,6 +6,8 @@ import com.ufranco.userservice.repositories.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,6 +25,16 @@ public class CreateUserTest {
   @InjectMocks
   UserService service;
 
+  User validUser = User.builder()
+    .id(null)
+    .username("abelain99")
+    .displayname("Carlos Santana")
+    .email("carlitossantana@gmail.com")
+    .password("T3tit@2aw2")
+    .createdAt(null)
+    .modifiedAt(null)
+    .build();
+
   @AfterEach
   public void resetMocks() {
     reset(repository);
@@ -30,7 +42,7 @@ public class CreateUserTest {
 
   @Test
   public void validUserTest()  {
-    User user = getValidUser();
+    User user = validUser;
 
     when(repository.existsByUsername(user.getUsername()))
       .thenReturn(false);
@@ -44,8 +56,7 @@ public class CreateUserTest {
 
   @Test
   public void parameterizedIdTest() {
-    User user = getValidUser();
-    user.setId(1L);
+    User user = validUser.changeId(1L);
 
     InvalidUserFieldsException exception = itThrowsException(user);
 
@@ -56,9 +67,9 @@ public class CreateUserTest {
   }
 
   @Test
-  public void invalidUsernameTest() {
-    User user = getValidUser();
-    user.setUsername("a");
+  public void nullUsernameTest() {
+    User user = validUser
+      .changeUsername(null);
 
     InvalidUserFieldsException exception = itThrowsException(user);
 
@@ -69,8 +80,47 @@ public class CreateUserTest {
   }
 
   @Test
+  public void invalidUsernameTest() {
+    User user = validUser
+      .changeUsername("a");
+
+    InvalidUserFieldsException exception = itThrowsException(user);
+
+    assertEquals(
+      "username",
+      exception.getInvalidFields().get(0).getFieldName()
+    );
+  }
+
+  @Test
+  public void nullDisplaynameTest() {
+    User user = validUser
+      .changeDisplayname(null);
+
+    InvalidUserFieldsException exception = itThrowsException(user);
+
+    assertEquals(
+      "displayname",
+      exception.getInvalidFields().get(0).getFieldName()
+    );
+  }
+
+  @Test
+  public void displaynameTooLargeTest() {
+    User user = validUser
+      .changeDisplayname("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+
+    InvalidUserFieldsException exception = itThrowsException(user);
+
+    assertEquals(
+      "displayname",
+      exception.getInvalidFields().get(0).getFieldName()
+    );
+  }
+
+  @Test
   public void takenUsernameTest() {
-    User user = getValidUser();
+    User user = validUser;
 
     when(repository.existsByUsername(user.getUsername()))
       .thenReturn(true);
@@ -86,8 +136,8 @@ public class CreateUserTest {
 
   @Test
   public void invalidEmailTest() {
-    User user = getValidUser();
-    user.setEmail("carlossantanagmail.com");
+    User user = validUser
+      .changeEmail("carlossantanagmail.com");
 
     InvalidUserFieldsException exception = itThrowsException(user);
 
@@ -99,7 +149,7 @@ public class CreateUserTest {
 
   @Test
   public void takenEmailTest() {
-    User user = getValidUser();
+    User user = validUser;
     when(repository.existsByEmail(user.getEmail()))
       .thenReturn(true);
 
@@ -111,10 +161,20 @@ public class CreateUserTest {
     );
   }
 
-  @Test
-  public void invalidPasswordTest() {
-    User user = getValidUser();
-    user.setPassword("t3stit0_");
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "",
+    "a",
+    "testarudo",
+    "TESTARUDO",
+    "testarudo9",
+    "Testarudo9",
+    "T3starudo9",
+    "T3sta rudo9"
+  })
+  public void invalidPasswordTest(String password) {
+    User user = validUser
+      .changePassword(password);
 
     InvalidUserFieldsException exception = itThrowsException(user);
 
@@ -126,9 +186,9 @@ public class CreateUserTest {
 
   @Test
   public void multipleInvalidFieldsTest() {
-      User user = getValidUser();
-      user.setUsername("aa___");
-      user.setPassword("testito");
+      User user = validUser
+        .changeUsername("aa___")
+        .changePassword("testito");
 
     InvalidUserFieldsException exception = itThrowsException(user);
 
@@ -148,18 +208,6 @@ public class CreateUserTest {
     return assertThrows(
       InvalidUserFieldsException.class,
       () -> service.createUser(user)
-    );
-  }
-
-  private User getValidUser() {
-    return new User(
-      null,
-      "abelain99",
-      "Carlos Santana",
-      "carlitossantana@gmail.com",
-      "T3tit@2aw2",
-      null,
-      null
     );
   }
 
