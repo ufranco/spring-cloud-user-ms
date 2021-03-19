@@ -2,17 +2,15 @@ package com.ufranco.userservice.models.dto;
 
 import com.ufranco.userservice.models.dto.abstracts.QueryResponse;
 import com.ufranco.userservice.models.entities.User;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
-@Data
-@EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
-@NoArgsConstructor
+@Getter
+@ToString
+@EqualsAndHashCode(callSuper = true)
+@Builder
 public class UserQueryResponse extends QueryResponse {
   List<User> users;
 

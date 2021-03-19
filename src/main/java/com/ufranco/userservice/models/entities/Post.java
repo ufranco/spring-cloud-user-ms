@@ -1,14 +1,15 @@
 package com.ufranco.userservice.models.entities;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Date;
 
-@Data
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor
+@Getter
+@Setter(value = AccessLevel.PRIVATE)
+@EqualsAndHashCode
+@ToString
 public class Post {
   private Long id;
   private Long userId;

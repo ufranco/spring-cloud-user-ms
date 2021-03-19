@@ -1,15 +1,15 @@
 package com.ufranco.userservice.models.exceptions;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
-@Data
-@NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
+@Getter
+@ToString
+@Builder
 public class InvalidField {
-  private String fieldName;
-  private List<String> messages;
+  private final String fieldName;
+  private final List<String> messages;
 }
