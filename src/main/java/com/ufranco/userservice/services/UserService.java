@@ -82,6 +82,7 @@ public class UserService {
 
   public Response deleteUser(Long id) throws InvalidUserFieldsException {
     validateForDelete(id);
+
     repository.deleteById(id);
 
     User userDeleted = User.builder()
@@ -142,7 +143,6 @@ public class UserService {
     if(params.getSortBy().equalsIgnoreCase("password")) {
 
       invalidFields.add(
-
         InvalidField.builder()
           .fieldName("sortBy")
           .messages(List.of("Sort By field not valid."))
@@ -152,7 +152,6 @@ public class UserService {
       try {
         User.class.getDeclaredField(params.getSortBy().toLowerCase());
       } catch (NoSuchFieldException e) {
-
         invalidFields.add(
           InvalidField.builder()
             .fieldName("sortBy")
@@ -216,8 +215,11 @@ public class UserService {
         invalidFields.add(
           InvalidField.builder()
             .fieldName("modifiedAt")
-            .messages(List.of("Version mismatch between data provided and data stored."))
+            .messages(
+              List.of("Version mismatch between data provided and data stored.")
+            )
             .build()
+
         );
       }
 
@@ -352,17 +354,16 @@ public class UserService {
     } else {
 
       if (!Pattern.matches("^.{8,50}$", password)) {
-        messages.add("Password must contain at least 8 characters and less than 50.");
+        messages.add("Password must have at least 8 characters and less than 50.");
       }
       if (!Pattern.matches("^.*[0-9].*[0-9].*$", password)) {
-        messages.add("Password must contain at least two digits.");
+        messages.add("Password must have at least two digits.");
       }
       if (!Pattern.matches("^.*[a-z].*$", password)) {
-        messages.add("Password must contain at least one lowercase character.");
-        System.out.println("a");
+        messages.add("Password must have at least one lowercase character.");
       }
       if (!Pattern.matches("^.*[A-Z].*$", password)) {
-        messages.add("Password must contain at least one uppercase character.");
+        messages.add("Password must have at least one uppercase character.");
       }
       if (Pattern.matches("^.*\\s.*$", password)) {
         messages.add("Password must not contain white spaces.");

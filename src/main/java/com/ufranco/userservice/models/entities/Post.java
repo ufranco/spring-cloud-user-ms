@@ -4,10 +4,12 @@ import lombok.*;
 
 import java.util.Date;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+import static lombok.AccessLevel.PRIVATE;
+
+@NoArgsConstructor(access = PRIVATE)
 @AllArgsConstructor
 @Getter
-@Setter(value = AccessLevel.PRIVATE)
+@Setter(value = PRIVATE)
 @EqualsAndHashCode
 @ToString
 public class Post {
