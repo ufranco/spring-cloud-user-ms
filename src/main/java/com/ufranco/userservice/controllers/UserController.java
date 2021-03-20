@@ -46,7 +46,8 @@ public class UserController {
   public CompleteResponse getUser(@PathVariable("id") Long id) throws InvalidFieldsException {
     Response userResponse = service.getUser(id);
 
-    /*PostQueryResponse postResponse =
+    /*
+    PostQueryResponse postResponse =
       webClient.build()
         .get()
         .uri("http://post-service/post/user/" + id)
